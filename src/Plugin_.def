@@ -1,0 +1,12 @@
+LIBRARY
+
+EXPORTS
+	GetPluginType						PRIVATE
+	GetName=GetPluginName				PRIVATE
+	GetVersion=GetPluginVersion			PRIVATE
+	GetPluginVersion					PRIVATE
+	GetAuthor=GetPluginAuthor			PRIVATE
+	GetSyntax=GetPluginSyntax			PRIVATE
+	GetDescription=GetPluginDescription	PRIVATE
+	GetExample=GetPluginExample			PRIVATE
+	PluginInline						PRIVATE

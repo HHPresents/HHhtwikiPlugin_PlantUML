@@ -1,0 +1,192 @@
+*Webモード
+
+オンライン上で稼働している PlantUML Server を使用します。~
+このモード最大の魅力は、ひとりWikiを使用している自分のPC上に PlantUML(Java/Graphviz) のインストールが不要であることです。
+
+処理内容は、オンライン上で稼働している PlantUML Server にアクセスするだけです。~
+パフォーマンスは、サーバとネットワークの負荷次第です。
+
+Webモードで使用するオンラインWebサーバのURLは~
+HHhtwikiPlugin_PlantUML.config の WebSettings から設定できます。
+
+#PlantUML(){{
+@startuml
+
+skinparam ParticipantPadding 30
+skinparam BoxPadding 30
+skinparam style strictuml
+
+box "クライアント"
+participant "ひとりWiki" as htwiki
+end box
+
+box "サーバー"
+participant "PlantUML" as PlantUML
+end box
+
+activate      htwiki
+activate      PlantUML
+
+== プラグイン使用時 ==
+
+htwiki     -> htwiki   : プラグイン呼び出し
+activate      htwiki
+
+htwiki     -> PlantUML : request(HTTP)
+PlantUML   -> htwiki   : 
+
+deactivate    htwiki
+note right htwiki
+レスポンスはサーバとネットワークの負荷次第
+end note
+
+== ひとりWiki終了時 ==
+
+htwiki   ->   htwiki   : プラグイン破棄
+activate      htwiki
+
+deactivate    htwiki
+destroy       htwiki
+
+@enduml
+}}
+
+
+
+
+
+
+*パイプモード
+
+PlantUMLをパイプモードで起動します。~
+PlantUMLを自分のPC上で起動させるモードなので、PlantUML(Java/Graphviz) のインストールが必要です。
+
+パイプモードは、PlantUMLを一番シンプルに使用できるモードです。~
+PlantUMLとのやりとりは標準入出力で行いますので、完全にオフラインです。~
+しかし、処理をさせる度にPlantUML(Java)を起動させる必要があるので、パフォーマンスは悪いです。
+
+パイプモードでは、使用する Java と Graphviz に関する設定が必要です。~
+HHhtwikiPlugin_PlantUML.config の JavaSettings と GraphvizSettings を設定してください。
+
+#PlantUML(){{
+@startuml
+
+skinparam ParticipantPadding 30
+skinparam style strictuml
+
+participant "ひとりWiki"     as htwiki
+participant "PlantUML(pipe)" as PlantUML
+
+activate   htwiki
+
+== プラグイン使用時 ==
+
+htwiki     -> htwiki      : プラグイン呼び出し
+activate      htwiki
+
+htwiki     -> PlantUML ** : create process
+activate      PlantUML
+
+|||
+note over PlantUML
+起動に時間がかかるので、どうしても遅い
+end note
+|||
+
+htwiki     -> PlantUML    : request(標準入出力)
+PlantUML   -> htwiki      : 
+destroy       PlantUML
+deactivate    htwiki
+
+note right PlantUML
+パイプモードはプロセス常駐できない
+(処理が終わったら終了する)
+end note
+
+== ひとりWiki終了時 ==
+
+htwiki   ->   htwiki   : プラグイン破棄
+activate      htwiki
+
+deactivate    htwiki
+destroy       htwiki
+
+@enduml
+}}
+
+
+
+*PicoWebモード
+
+PlantUMLをPicoWebモードで起動します。~
+PlantUMLを自分のPC上で起動させるモードなので、PlantUML(Java/Graphviz) のインストールが必要です。
+
+パイプモードとの大きな違いは、PicoWebモードで起動させたPlantUMLは、ひとりWikiが終了するまで起動させたままにできる点です。~
+そのため、起動後(次回以降)のレスポンスは、おそらく全モードの中で最高です。
+
+PicoWebはプライベートなWebサーバなのでオフラインでも使用できます。~
+ただし、TCPポートを使用するのでマルチログイン環境(仮想デスクトップ環境)には向きません。
+
+PicoWebモードで使用するTCPポート番号は~
+HHhtwikiPlugin_PlantUML.config の PicoWebSettings から設定できます。
+
+PicoWebモードでは、使用する Java と Graphviz に関しても設定が必要です。~
+HHhtwikiPlugin_PlantUML.config の JavaSettings と GraphvizSettings についても設定してください。
+
+#PlantUML(){{
+@startuml
+
+skinparam ParticipantPadding 30
+skinparam style strictuml
+
+participant "ひとりWiki"            as htwiki
+participant "PlantUML(picoweb)"     as PlantUML
+
+activate   htwiki
+
+== プラグイン使用時(初回) ==
+
+htwiki     -> htwiki      : プラグイン呼び出し
+activate      htwiki
+
+htwiki     -> PlantUML ** : create process
+activate      PlantUML
+|||
+
+htwiki     -> PlantUML    : request(HTTP)
+PlantUML   -> htwiki      : 
+
+deactivate    htwiki
+note right htwiki
+初回のレスポンスはPlantUMLの起動に時間がかかるので、どうしても遅い
+end note
+
+== プラグイン使用時(picoweb起動後) ==
+
+htwiki     -> htwiki      : プラグイン呼び出し
+activate      htwiki
+
+htwiki     -> PlantUML    : request(HTTP)
+PlantUML   -> htwiki      : 
+
+deactivate    htwiki
+note right htwiki
+起動させたPlantUMLとやり取りするのでレスポンスは高速
+end note
+
+
+== ひとりWiki終了時 ==
+
+htwiki     -> htwiki      : プラグイン破棄
+activate      htwiki
+htwiki     -> PlantUML !! : terminate process
+destroy       htwiki
+
+note right PlantUML
+ひとりWikiの終了時にPlantUMLも終了する
+end note
+
+destroy htwiki
+
+@enduml
+}}
